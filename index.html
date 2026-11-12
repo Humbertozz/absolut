@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>Absolut Home</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Site de lançamento imersivo: tour em VFX com câmera em profundidade e transição em lâminas diagonais (grafismo do book), galeria arrastável, plantas, implantação e cadastro. Terracota, sálvia e laranja. */
+:root{
+  --night:#1A0B06; --brown:#6B2614; --terra:#8E3A1C; --orange:#E2692B; --sage:#DDE1B8; --cream:#F6F1E4; --ink:#2A120A;
+  --glass:rgba(26,11,6,.46); --stroke:rgba(255,240,225,.2);
+  --head:"Inter Tight","Helvetica Neue",Arial,ui-sans-serif,system-ui,sans-serif;
+  --serif:"Fraunces","Playfair Display",Georgia,serif;
+  --font:"Manrope","Avenir Next","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+  --mono:"DM Mono",ui-monospace,Menlo,monospace;
+  --ease:cubic-bezier(.7,0,.2,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--night);color:#fff;font:400 16px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+button{font-family:inherit;color:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
+h1,h2{text-wrap:balance}
+
+/* ===== palco ===== */
+.stage{position:relative;height:100vh;height:100svh;min-height:640px;overflow:hidden;background:var(--night);touch-action:pan-y}
+.persp{position:absolute;inset:0;perspective:1400px;overflow:hidden}
+.cam{position:absolute;inset:-3%;transform-style:preserve-3d;will-change:transform;transition:transform .2s linear}
+.clip{position:absolute;inset:0;opacity:0;z-index:1}
+.clip.on{opacity:1;z-index:2}
+.clip.in{opacity:1;z-index:3}
+.clip video{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.4s var(--ease),filter 1.4s}
+.clip.out video{transform:scale(1.14) rotate(1.5deg);filter:brightness(.55) saturate(1.2) blur(2px)}
+.shards{position:absolute;inset:0;z-index:4;pointer-events:none}
+.shards i{position:absolute;inset:0;transform:translateX(130%) skewX(-18deg);will-change:transform}
+.shards i:nth-child(1){background:var(--brown)}
+.shards i:nth-child(2){background:var(--orange)}
+.shards i:nth-child(3){background:var(--sage)}
+.shade{position:absolute;inset:0;z-index:5;pointer-events:none;background:
+  linear-gradient(180deg,rgba(26,11,6,.64) 0%,rgba(26,11,6,0) 22%),
+  linear-gradient(0deg,rgba(26,11,6,.94) 0%,rgba(26,11,6,.5) 34%,rgba(26,11,6,0) 60%),
+  linear-gradient(90deg,rgba(26,11,6,.6) 0%,rgba(26,11,6,0) 50%)}
+.grain{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:.08;mix-blend-mode:overlay}
+.tri{position:absolute;z-index:6;pointer-events:none;width:clamp(90px,11vw,170px);aspect-ratio:1;opacity:.92}
+.tri.a{left:0;bottom:0;background:var(--brown);clip-path:polygon(0 0,0 100%,100% 100%)}
+.tri.b{right:0;top:0;background:var(--sage);clip-path:polygon(0 0,100% 0,100% 100%);width:clamp(60px,7vw,110px);opacity:.85}
+
+.top{position:absolute;z-index:7;left:0;right:0;top:0;padding-top:max(26px,calc(env(safe-area-inset-top,0px) + 14px))}
+.top .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px}
+.brands{justify-self:start;display:flex;align-items:center;gap:16px}
+.brands .ab{height:34px;width:auto}
+.brands .sep{width:1px;height:30px;background:rgba(255,255,255,.35)}
+.brands .mb{height:40px;width:auto}
+.hud{display:flex;align-items:center;gap:14px;padding:6px;border-radius:999px;background:var(--glass);border:1px solid var(--stroke);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.hud button{all:unset;cursor:pointer;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;transition:background .25s}
+.hud button:hover{background:rgba(255,255,255,.12)}
+.hud button:focus-visible{outline:2px solid var(--sage)}
+.hud svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.hudmid{display:grid;gap:5px;min-width:210px;text-align:center}
+.hudmid .mono{font-size:10.5px;white-space:nowrap}
+.hudmid .mono b{color:var(--sage);font-weight:500}
+.track{height:2px;background:rgba(255,255,255,.18);border-radius:1px;overflow:hidden}
+.track b{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--sage))}
+.topcta{justify-self:end;display:inline-flex;align-items:center;gap:10px;height:42px;padding:0 18px;border-radius:999px;background:var(--orange);color:#fff;text-decoration:none;font-weight:600;font-size:14px;border:0;cursor:pointer}
+.topcta i{width:7px;height:7px;border-radius:50%;background:#fff}
+@media (prefers-reduced-motion:no-preference){.topcta i{animation:blink 1.6s infinite}}
+@keyframes blink{50%{opacity:.25}}
+
+.ghost{position:absolute;z-index:6;right:3vw;bottom:-5vw;font-family:var(--head);font-weight:800;font-size:30vw;line-height:.8;letter-spacing:-.06em;color:transparent;-webkit-text-stroke:1px rgba(221,225,184,.16);pointer-events:none;user-select:none;transition:transform .3s linear}
+.copy{position:absolute;z-index:7;left:0;right:0;bottom:max(70px,calc(env(safe-area-inset-bottom,0px) + 52px));pointer-events:none}
+.txt{max-width:720px;min-width:0}
+.eyebrow{display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85)}
+.eyebrow::before{content:"";width:12px;height:12px;background:var(--orange);clip-path:polygon(0 0,100% 100%,0 100%)}
+.txt h1{font-family:var(--head);font-size:clamp(46px,6vw,98px);line-height:.95;letter-spacing:-.045em;font-weight:400;margin:16px 0 0}
+.ln{display:block;overflow:hidden;padding-bottom:.08em}
+.ln>span{display:inline-block;transform:translateY(110%) rotate(3deg);transform-origin:left bottom;transition:transform 1.05s var(--ease)}
+.ln.b>span{font-weight:800}
+.ln.y>span{font-family:var(--serif);font-style:italic;font-weight:600;letter-spacing:-.02em;color:var(--sage);padding-right:.06em}
+.txt p{font-size:clamp(15px,1.2vw,18px);color:rgba(255,255,255,.85);max-width:44ch;margin:16px 0 0;opacity:0;transform:translateY(10px);transition:opacity .8s .35s,transform .8s .35s var(--ease)}
+.txt.in .ln>span{transform:none}
+.txt.in .ln:nth-child(2)>span{transition-delay:.09s}
+.txt.in .ln:nth-child(3)>span{transition-delay:.18s}
+.txt.in p{opacity:1;transform:none}
+
+.rail{position:absolute;z-index:7;left:max(40px,env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%);display:grid;gap:10px}
+.rail button{all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.45);transition:color .3s}
+.rail button i{width:14px;height:1px;background:currentColor;transition:width .45s var(--ease)}
+.rail button span{opacity:0;transform:translateX(-6px);transition:opacity .35s,transform .35s}
+.rail button:hover span,.rail button.on span{opacity:1;transform:none}
+.rail button.on{color:#fff}
+.rail button.on i{width:40px;background:var(--orange)}
+.rail button:focus-visible{outline:2px solid var(--sage);outline-offset:4px}
+
+.intro{position:absolute;inset:0;z-index:9;display:grid;place-items:center;align-content:center;gap:24px;background:var(--brown);pointer-events:none;transition:clip-path 1.5s var(--ease);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.intro .ab{width:min(380px,66vw);height:auto;opacity:0;transform:scale(.94);animation:rise 1s .15s var(--ease) forwards}
+.intro .mono{color:var(--sage);opacity:0;animation:rise 1s .45s var(--ease) forwards}
+.intro .by{display:flex;align-items:center;gap:12px;opacity:0;animation:rise 1s .7s var(--ease) forwards}
+.intro .by img{height:46px;width:auto}
+.intro .by span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+@keyframes rise{to{opacity:1;transform:none}}
+.intro.gone{clip-path:polygon(100% 0,100% 0,100% 100%,100% 100%);visibility:hidden;transition:clip-path 1.5s var(--ease),visibility 0s 1.5s}
+
+/* cartão de cadastro */
+.panel{position:absolute;z-index:8;right:max(40px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-44%);width:360px;border-radius:26px;padding:24px;background:rgba(26,11,6,.56);border:1px solid var(--stroke);backdrop-filter:blur(24px) saturate(1.25);-webkit-backdrop-filter:blur(24px) saturate(1.25);display:grid;gap:14px}
+.panel h2{font-family:var(--head);font-size:30px;line-height:1.02;letter-spacing:-.035em;font-weight:400;margin:8px 0 0}
+.panel h2 b{font-family:var(--serif);font-style:italic;font-weight:600;color:var(--sage)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;border-radius:999px;border:1px solid var(--stroke)}
+.chip.o{border-color:rgba(226,105,43,.7);color:#FFB487}
+.form{display:grid;gap:12px}
+.f{display:grid;gap:4px}
+.f label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.f input{height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;padding:0 14px;font:500 16px var(--font);width:100%}
+.f input::placeholder{color:rgba(255,255,255,.4)}
+.f input:focus{outline:none;border-color:var(--sage);background:rgba(255,255,255,.1)}
+.err{color:#FFA37A;font-size:12px}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.45;color:rgba(255,255,255,.65)}
+.consent input{width:16px;height:16px;accent-color:var(--orange);margin-top:2px;flex:none}
+.go{display:inline-flex;justify-content:space-between;align-items:center;gap:18px;height:54px;padding:0 8px 0 24px;border-radius:999px;border:0;background:var(--orange);color:#fff;font:600 15px var(--font);cursor:pointer;text-decoration:none}
+.form .go{width:100%}
+.go i{width:38px;height:38px;border-radius:50%;background:var(--ink);display:grid;place-items:center;transition:transform .3s var(--ease)}
+.go i svg{width:14px;height:14px;stroke:var(--sage);fill:none;stroke-width:1.8}
+.go:hover i{transform:translateX(3px)}
+.go:disabled{opacity:.6;cursor:default}
+.go.small{height:50px;font-size:14px}
+.ok{border-radius:14px;padding:16px;background:rgba(221,225,184,.12);border:1px solid rgba(221,225,184,.4);display:grid;gap:4px;font-size:14px}
+.ok b{font-family:var(--serif);font-style:italic;font-size:22px;color:var(--sage)}
+.fine{font-size:11px;color:rgba(255,255,255,.5);line-height:1.4}
+.mcta,.close{display:none}
+.mform{display:none}
+@media (max-width:1100px){.mform{display:block}}
+.scrim{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .4s}
+
+/* seções */
+.sec{padding-block:100px;position:relative;overflow:hidden}
+.sec h2{font-family:var(--head);font-size:clamp(38px,4.8vw,74px);line-height:1;letter-spacing:-.045em;font-weight:400;margin:12px 0 0}
+.sec h2 b{font-family:var(--serif);font-style:italic;font-weight:600;letter-spacing:-.02em}
+.sec .head{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap;margin-bottom:44px}
+.sec .head p{max-width:40ch;margin:0}
+.light{background:var(--cream);color:var(--ink)}
+.light .mono{color:var(--orange)}
+.light h2 b{color:var(--terra)}
+.light .head p{color:#7B5646}
+.deco::after{content:"";position:absolute;right:0;top:0;width:clamp(80px,10vw,160px);aspect-ratio:1;background:var(--sage);clip-path:polygon(0 0,100% 0,100% 100%);opacity:.9}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(42,18,10,.16)}
+.stat{padding:28px 22px 0 0}
+.stat+.stat{padding-left:22px;border-left:1px solid rgba(42,18,10,.12)}
+.stat strong{display:block;font-family:var(--head);font-weight:700;font-size:clamp(46px,5vw,80px);letter-spacing:-.05em;line-height:1;color:var(--brown);font-variant-numeric:tabular-nums}
+.stat span{display:block;margin-top:8px;font-size:14px;color:#7B5646}
+
+.loc{background:var(--brown)}
+.loc .mono{color:var(--sage)}
+.loc h2 b{color:var(--sage)}
+.locgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:44px;align-items:center}
+.locimg{border-radius:28px;overflow:hidden;min-width:0;position:relative}
+.locimg video{width:100%;display:block;aspect-ratio:16/10;object-fit:cover}
+.dist{display:grid;gap:12px;margin:26px 0}
+.dist div{display:flex;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.14)}
+.dist strong{font-family:var(--head);font-weight:700;font-size:40px;letter-spacing:-.04em;color:var(--sage);min-width:130px}
+.dist span{color:rgba(255,255,255,.82)}
+.loc p{color:rgba(255,255,255,.8);max-width:46ch}
+
+.gal{background:var(--night)}
+.gal .mono{color:var(--sage)}
+.gal h2 b{color:var(--orange)}
+.gal .head p{color:rgba(255,255,255,.7)}
+.strip{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:18px;cursor:grab;scrollbar-width:thin;scrollbar-color:var(--orange) transparent;-webkit-overflow-scrolling:touch}
+.strip.drag{cursor:grabbing;scroll-snap-type:none}
+.card{flex:none;width:clamp(260px,30vw,420px);aspect-ratio:4/5;border-radius:24px;overflow:hidden;position:relative;scroll-snap-align:start;background:#000;border:0;padding:0;cursor:pointer;max-width:100%}
+.card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .9s var(--ease);pointer-events:none}
+.card:hover img{transform:scale(1.07)}
+.card .lab{position:absolute;left:0;right:0;bottom:0;padding:44px 18px 16px;background:linear-gradient(180deg,transparent,rgba(26,11,6,.9));text-align:left;color:#fff}
+.card .lab small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sage)}
+.card .lab b{font-family:var(--head);font-weight:700;font-size:22px;letter-spacing:-.02em}
+.card .eq{position:absolute;top:14px;right:14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;border-radius:999px;background:var(--orange);color:#fff}
+.lb{position:fixed;inset:0;z-index:30;background:rgba(10,4,2,.92);display:grid;place-items:center;padding:max(20px,env(safe-area-inset-top,0px)) 20px;opacity:0;pointer-events:none;transition:opacity .35s}
+.lb.open{opacity:1;pointer-events:auto}
+.lb img{max-width:min(1100px,92vw);max-height:78vh;border-radius:18px;display:block}
+.lb .cap{margin-top:14px;text-align:center;font-family:var(--head);font-size:20px}
+.lb button{position:absolute;top:max(20px,env(safe-area-inset-top,0px));right:20px;width:44px;height:44px;border-radius:50%;border:1px solid var(--stroke);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:20px}
+
+.plants{padding-top:100px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.tabs button{all:unset;cursor:pointer;padding:10px 18px;border-radius:999px;border:1px solid rgba(42,18,10,.2);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);transition:background .25s,color .25s}
+.tabs button[aria-selected="true"]{background:var(--brown);color:var(--sage);border-color:var(--brown)}
+.tabs button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+.plant{display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:center;background:#fff;border-radius:28px;padding:28px}
+.pimg{min-width:0;display:grid;place-items:center}
+.pimg img{width:100%;max-width:640px;height:auto;display:block;transition:opacity .35s,transform .6s var(--ease)}
+.pinfo{display:grid;gap:14px;align-content:start}
+.pinfo strong{font-family:var(--head);font-weight:700;font-size:clamp(50px,5vw,80px);letter-spacing:-.05em;line-height:1;color:var(--brown)}
+.pinfo ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.pinfo li{display:flex;gap:10px;align-items:flex-start;color:#5C3A2C}
+.pinfo li::before{content:"";width:9px;height:9px;background:var(--orange);clip-path:polygon(0 0,100% 100%,0 100%);margin-top:7px;flex:none}
+.pos{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:#8A6555;line-height:1.7}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.feat div{padding:16px 18px;border-radius:18px;background:#fff;font-weight:500;display:flex;gap:12px;align-items:center}
+.feat div::before{content:"";width:12px;height:12px;flex:none;background:var(--orange);clip-path:polygon(0 0,100% 100%,0 100%)}
+
+.impl{background:var(--sage);color:var(--ink)}
+.impl .mono{color:var(--terra)}
+.impl h2 b{color:var(--terra)}
+.implgrid{display:grid;grid-template-columns:1.3fr 1fr;gap:32px;align-items:center}
+.implimg{border-radius:28px;overflow:hidden;background:#fff;min-width:0}
+.implimg img{width:100%;height:auto;display:block}
+.legend{margin:0;padding:0;list-style:none;counter-reset:n;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.legend li{counter-increment:n;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.55);font-size:15px;font-weight:500}
+.legend li::before{content:counter(n,decimal-leading-zero);font-family:var(--mono);font-size:11px;width:30px;height:30px;border-radius:50%;background:var(--brown);color:var(--sage);display:grid;place-items:center;flex:none}
+
+.ficha{margin:0;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid rgba(42,18,10,.16)}
+.ficha div{padding:18px 18px 18px 0;border-bottom:1px solid rgba(42,18,10,.12)}
+.ficha dt{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--orange)}
+.ficha dd{margin:4px 0 0;font-size:16px;font-weight:600}
+.final{background:var(--night);padding-block:72px}
+.cta{display:flex;justify-content:space-between;align-items:center;gap:28px;flex-wrap:wrap;padding:44px;border-radius:30px;background:var(--brown);position:relative;overflow:hidden}
+.cta::after{content:"";position:absolute;right:0;bottom:0;width:200px;aspect-ratio:1;background:var(--orange);clip-path:polygon(100% 0,100% 100%,0 100%);opacity:.9}
+.cta>*{position:relative;z-index:1}
+.cta h2{margin-top:10px}
+.cta h2 b{color:var(--sage)}
+footer{background:var(--night);color:#ab9282;font-size:12px;padding-block:30px;border-top:1px solid rgba(255,255,255,.08)}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+footer img{height:58px;width:auto}
+
+@media (max-width:1200px){.rail{display:none}}
+@media (max-width:1100px){
+  .panel{position:relative;right:auto;top:auto;transform:none;width:auto;max-width:560px;margin:0 auto;background:rgba(26,11,6,.9)}
+  .mform{background:var(--night);padding:28px max(20px,env(safe-area-inset-left,0px)) 36px}
+  .mcta{display:flex;position:fixed;z-index:19;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));justify-content:space-between;align-items:center;height:58px;padding:0 8px 0 22px;border-radius:999px;border:0;background:var(--orange);color:#fff;font:600 15px var(--font);cursor:pointer;box-shadow:0 18px 40px -12px rgba(0,0,0,.6);transition:transform .4s var(--ease)}
+  .mcta i{width:42px;height:42px;border-radius:50%;background:var(--ink);display:grid;place-items:center}
+  .mcta i svg{width:14px;height:14px;stroke:var(--sage);fill:none;stroke-width:1.8}
+  .mcta.hide{transform:translateY(160%)}
+  .copy{bottom:max(100px,calc(env(safe-area-inset-bottom,0px) + 92px))}
+  .plant,.implgrid,.locgrid{grid-template-columns:1fr}
+  .plant{padding:18px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat{padding:22px 14px 22px 0!important;border-left:0!important;border-bottom:1px solid rgba(42,18,10,.12)}
+  .feat{grid-template-columns:1fr 1fr}
+  .ficha{grid-template-columns:1fr 1fr}
+}
+@media (max-width:700px){
+  .wrap{padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+  .top .wrap{grid-template-columns:1fr auto}
+  .topcta{display:none}
+  .brands .ab{height:24px}.brands .mb{height:30px}.brands{gap:10px}
+  .hudmid{min-width:112px}
+  .hudmid .mono{font-size:9.5px;letter-spacing:.08em}
+  .txt h1{font-size:clamp(42px,12vw,58px)}
+  .ghost{font-size:58vw;bottom:auto;top:16%}
+  .tri.b{display:none}
+  .shade{background:linear-gradient(180deg,rgba(26,11,6,.72) 0%,rgba(26,11,6,0) 20%),linear-gradient(0deg,rgba(26,11,6,.96) 0%,rgba(26,11,6,.55) 36%,rgba(26,11,6,0) 62%)}
+  .legend,.feat,.ficha{grid-template-columns:1fr}
+  .sec{padding-block:72px}
+  .cta{padding:28px}
+  .final{padding-bottom:120px}
+  .dist strong{font-size:32px;min-width:100px}
+}
+@media (prefers-reduced-motion:reduce){.intro .ab,.intro .mono,.intro .by{animation:none;opacity:1;transform:none}.cam{transition:none}}
+</style>
+</head>
+<body>
+
+
+<section class="stage" id="tour" aria-label="Tour pelo Absolut Home">
+  <div class="persp"><div class="cam" id="cam"><div id="clips"></div></div></div>
+  <div class="shards" id="shards" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="shade"></div>
+  <div class="grain" id="grain"></div>
+  <div class="tri a" aria-hidden="true"></div><div class="tri b" aria-hidden="true"></div>
+  <div class="ghost" id="ghost" aria-hidden="true">01</div>
+  <div class="intro" id="intro" aria-hidden="true">
+    <img class="ab" src="v/absolut.png" alt="">
+    <span class="mono">Sua vida por inteiro · Bairro Aeroporto</span>
+    <div class="by"><span>Comercialização</span><img src="v/morarbem.png" alt=""></div>
+  </div>
+
+  <div class="top"><div class="wrap">
+    <div class="brands"><img class="ab" src="v/absolut.png" alt="Absolut Home"><i class="sep"></i><img class="mb" src="v/morarbem.png" alt="Morar Bem Imobiliária"></div>
+    <div class="hud">
+      <button id="prev" type="button" aria-label="Cena anterior"><svg viewBox="0 0 16 16"><path d="M10 3L5 8l5 5"/></svg></button>
+      <div class="hudmid"><div class="mono" id="hudtxt"><b>01</b> / 10 · Localização</div><div class="track"><b id="bar"></b></div></div>
+      <button id="next" type="button" aria-label="Próxima cena"><svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5"/></svg></button>
+    </div>
+    <a class="topcta" href="#cadastro" data-open><i></i>Quero conhecer</a>
+  </div></div>
+
+  <nav class="rail" id="rail" aria-label="Cenas"></nav>
+
+  <div class="copy"><div class="wrap">
+    <div class="txt in" id="txt">
+      <div class="eyebrow mono" id="eye">Bairro Aeroporto · Aracaju/SE</div>
+      <h1 id="hl"><span class="ln"><span>Perto de tudo</span></span><span class="ln y"><span>que importa.</span></span></h1>
+      <p id="pp">A 200 metros da Av. Melício Machado, no encontro entre a Atalaia e o Aeroporto.</p>
+    </div>
+  </div></div>
+
+  <aside class="panel" id="cadastro" aria-label="Cadastro">
+        <div><div class="mono" style="color:var(--sage)">Morar Bem Imobiliária · lançamento</div><h2>2 e 3 quartos <b>com suíte e varanda gourmet</b></h2></div>
+    <div class="chips"><span class="chip">59,84 a 66,89 m²</span><span class="chip">1 vaga</span><span class="chip o">Lazer entregue equipado</span></div>
+    <form id="Lead_Absolut" class="form" novalidate>
+      <input type="text" id="site" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <div class="f"><label for="nome">Nome</label><input id="nome" name="nome" type="text" autocomplete="name" placeholder="Nome e sobrenome"><div class="err" id="e-nome"></div></div>
+      <div class="f"><label for="tel">WhatsApp</label><input id="tel" name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(79) 99999-9999"><div class="err" id="e-tel"></div></div>
+      <div class="f"><label for="email">E-mail</label><input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com"><div class="err" id="e-email"></div></div>
+      <label class="consent"><input type="checkbox" id="lgpd">Autorizo a Morar Bem Imobiliária a falar comigo sobre o Absolut Home (LGPD).</label>
+      <div class="err" id="e-lgpd"></div>
+      <button class="go" id="send" type="submit"><span id="send-t">Quero conhecer o Absolut</span><i><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></i></button>
+      <div class="ok" id="ok" hidden><b>Cadastro recebido</b><span>Um corretor da Morar Bem Imobiliária vai falar com você no WhatsApp em instantes.</span></div>
+    </form>
+    <div class="fine">Imagens meramente ilustrativas.</div>
+  </aside>
+  <button class="mcta" id="mcta" type="button" data-open>Quero conhecer o Absolut<i><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></i></button>
+</section>
+
+<section class="mform" id="mform" aria-label="Cadastro"></section>
+
+<section class="sec light deco">
+  <div class="wrap">
+    <div class="mono">Absolut Home</div>
+    <h2>Sua vida <b>por inteiro</b></h2>
+    <div class="stats" style="margin-top:44px">
+      <div class="stat"><strong>224</strong><span>apartamentos em 2 torres</span></div>
+      <div class="stat"><strong>14</strong><span>pavimentos por torre</span></div>
+      <div class="stat"><strong>2 e 3</strong><span>quartos, sempre com suíte</span></div>
+      <div class="stat"><strong>12</strong><span>ambientes de lazer equipados</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec loc" id="localizacao">
+  <div class="wrap locgrid">
+    <div class="locimg"><video src="v/s1.mp4" poster="v/s1.jpg" muted playsinline loop autoplay preload="none" aria-hidden="true"></video></div>
+    <div>
+      <div class="mono">Localização</div>
+      <h2>Entre a Atalaia e <b>o Aeroporto</b></h2>
+      <div class="dist">
+        <div><strong>200 m</strong><span>da Av. Melício Machado</span></div>
+        <div><strong>400 m</strong><span>da Atalaia</span></div>
+      </div>
+      <p>Perto da praia, dos serviços que facilitam a rotina e das principais vias de acesso de Aracaju.</p>
+      <p style="margin:18px 0 24px">Av. Fábio José Cardoso Ramos, s/n · Aeroporto · Aracaju/SE</p>
+      <a class="go small" href="https://www.google.com/maps/search/?api=1&query=Av.+F%C3%A1bio+Jos%C3%A9+Cardoso+Ramos+Aeroporto+Aracaju+SE" target="_blank" rel="noopener"><span>Abrir no Google Maps</span><i><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></i></a>
+    </div>
+  </div>
+</section>
+
+<section class="sec gal" id="lazer">
+  <div class="wrap">
+    <div class="head"><div><div class="mono">Lazer completo e equipado</div><h2>Tudo no <b>seu condomínio</b></h2></div><p>Arraste para ver os ambientes. Toque em um para ampliar.</p></div>
+    <div class="strip" id="strip"></div>
+  </div>
+</section>
+
+<section class="sec light plants" id="plantas">
+  <div class="wrap">
+    <div class="head"><div><div class="mono">Plantas</div><h2>2 ou 3 quartos, <b>sempre com suíte</b></h2></div><p>De 59,84 a 66,89 m², com varanda gourmet e ambientes sociais integrados.</p></div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="plant">
+      <div class="pimg"><img id="pimg" src="v/pl1.jpg" alt="Planta Tipo 01 humanizada"></div>
+      <div class="pinfo">
+        <div class="mono" id="pname">Planta Tipo 01</div>
+        <strong id="parea">66,89 m²</strong>
+        <ul id="plist"></ul>
+        <div class="pos" id="ppos"></div>
+        <a class="go small" href="#cadastro" data-open><span>Receber a tabela desta planta</span><i><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></i></a>
+      </div>
+    </div>
+    <div class="feat">
+      <div>Banheiros e cozinha 100% revestidos</div>
+      <div>Fechadura eletrônica em todas as unidades</div>
+      <div>Varanda gourmet com guarda-corpo de vidro</div>
+      <div>Preparação para split em todos os quartos</div>
+      <div>Sala e cozinha integradas à varanda</div>
+      <div>Tomadas USB nos apartamentos</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec impl">
+  <div class="wrap">
+    <div class="head"><div><div class="mono">Implantação</div><h2>Um condomínio <b>pensado por inteiro</b></h2></div></div>
+    <div class="implgrid">
+      <div class="implimg"><img src="v/implant.jpg" alt="Implantação do Absolut Home com os ambientes numerados"></div>
+      <ol class="legend">
+        <li>Guarita / delivery</li><li>Piscina</li><li>Churrasqueiras</li><li>Salão de festas</li><li>Pet park</li><li>Bicicletário</li>
+        <li>Academia</li><li>Salão de jogos</li><li>Parquinho</li><li>Kids</li><li>Espaço para esportes</li><li>Mini market</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="sec light">
+  <div class="wrap">
+    <div class="mono">Ficha técnica</div>
+    <h2 style="margin-bottom:40px">Os <b>números</b> do Absolut</h2>
+    <dl class="ficha">
+      <div><dt>Terreno</dt><dd>7.324,61 m²</dd></div>
+      <div><dt>Torres</dt><dd>2 torres</dd></div>
+      <div><dt>Pavimentos</dt><dd>Térreo + 13 tipos</dd></div>
+      <div><dt>Unidades</dt><dd>112 por torre · 224 no total</dd></div>
+      <div><dt>Por pavimento</dt><dd>8 apartamentos</dd></div>
+      <div><dt>Elevadores</dt><dd>2 por torre</dd></div>
+      <div><dt>Vagas</dt><dd>1 por unidade</dd></div>
+      <div><dt>Motos</dt><dd>13 vagas</dd></div>
+      <div><dt>Arquitetura</dt><dd>Immobile Arquitetura</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="sec final">
+  <div class="wrap"><div class="cta">
+    <div><div class="mono" style="color:var(--sage)">Morar Bem Imobiliária</div><h2>Sua vida <b>por inteiro</b> começa aqui</h2></div>
+    <a class="go" href="#cadastro" data-open><span>Quero conhecer o Absolut</span><i><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></i></a>
+  </div></div>
+</section>
+<div class="lb" id="lb" role="dialog" aria-label="Imagem ampliada"><button type="button" id="lbx" aria-label="Fechar">×</button><div><img id="lbi" alt=""><div class="cap" id="lbc"></div></div></div>
+<footer><div class="wrap"><img src="v/morarbem.png" alt="Morar Bem Imobiliária"><span>Absolut Home · Av. Fábio José Cardoso Ramos, s/n · Aeroporto, Aracaju/SE · Comercialização: Morar Bem Imobiliária · CRECI 195 PJ</span><span>Imagens meramente ilustrativas.</span></div></footer>
+
+<script>
+/* ===== CONFIGURAÇÃO PARA PUBLICAR ===== */
+var CONFIG={ pixelId:"", webhookUrl:"" };  /* Pixel do Meta e endereço do CRM que recebe o cadastro */
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  if(CONFIG.pixelId){!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',CONFIG.pixelId);fbq('track','PageView');}
+
+  var S=[
+    {v:'s1',n:'Localização',eye:'Bairro Aeroporto · Aracaju/SE',h:[['Perto de tudo',0],['que importa.',2]],p:'A 200 metros da Av. Melício Machado, no encontro entre a Atalaia e o Aeroporto.'},
+    {v:'s2',n:'Fachada',eye:'2 torres · 224 apartamentos',h:[['Sua vida',0],['por inteiro.',2]],p:'Fachada em textura, com paisagismo e acesso controlado.'},
+    {v:'s3',n:'Lazer',eye:'Lazer completo e equipado',h:[['12 ambientes',1],['entregues',0],['equipados.',2]],p:'Piscina, academia, salão de festas, kids, pet park e muito mais.'},
+    {v:'s4',n:'Piscina',eye:'Piscina adulto e infantil',h:[['Deck, prainha',0],['e o sol',1],['de Aracaju.',2]],p:'Piscina adulto e infantil com deck e prainha.'},
+    {v:'s5',n:'Fim de tarde',eye:'Pôr do sol na piscina',h:[['O fim de tarde',0],['é aqui',2]],p:'Espreguiçadeiras e churrasqueiras ao lado da piscina.'},
+    {v:'s6',n:'Academia',eye:'Academia climatizada',h:[['Na dúvida,',0],['treine.',2]],p:'Academia completa e climatizada dentro do condomínio.'},
+    {v:'s7',n:'Salão de festas',eye:'Salão de festas climatizado',h:[['Receba',0],['quem você',1],['ama.',2]],p:'Salão de festas climatizado e entregue decorado.'},
+    {v:'s8',n:'Parquinho',eye:'Parquinho e kids',h:[['Infância',0],['ao ar',1],['livre.',2]],p:'Parquinho e espaço kids para as crianças.'},
+    {v:'s9',n:'Varanda',eye:'Varanda gourmet',h:[['Sua varanda',0],['com vista',1],['para a cidade.',2]],p:'Sala e cozinha integradas à varanda com guarda-corpo de vidro.'},
+    {v:'s10',n:'À noite',eye:'2 e 3 quartos com suíte',h:[['Seu novo',0],['endereço',2],['te espera.',1]],p:'Apartamentos de 59,84 m² a 66,89 m², sempre com suíte e varanda.'}
+  ];
+  var N=S.length,TR=1.35,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stage=$('tour'),clipsEl=$('clips'),cam=$('cam'),shards=[].slice.call($('shards').children),txt=$('txt'),ghost=$('ghost'),cur=0,busy=false,paused=false,visible=true;
+
+  (function(){var c=document.createElement('canvas');c.width=c.height=140;var g=c.getContext('2d'),d=g.createImageData(140,140);for(var i=0;i<d.data.length;i+=4){var v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;}g.putImageData(d,0,0);$('grain').style.backgroundImage='url('+c.toDataURL()+')';})();
+
+  var clips=S.map(function(s,i){
+    var d=document.createElement('div');d.className='clip'+(i===0?' on':'');
+    var v=document.createElement('video');v.muted=true;v.defaultMuted=true;v.playsInline=true;v.setAttribute('playsinline','');v.setAttribute('muted','');
+    v.preload=i<2?'auto':'none';v.poster='v/'+s.v+'.jpg';v.setAttribute('aria-hidden','true');if(i<2)v.src='v/'+s.v+'.mp4';
+    d.appendChild(v);clipsEl.appendChild(d);return {el:d,v:v};
+  });
+  var rail=S.map(function(s,i){var b=document.createElement('button');b.type='button';b.innerHTML='<i></i><span>'+String(i+1).padStart(2,'0')+' '+s.n+'</span>';b.setAttribute('aria-label','Ir para '+s.n);b.onclick=function(){jump(i);};$('rail').appendChild(b);return b;});
+  function ensure(i){var c=clips[i];if(!c.v.getAttribute('src')){c.v.src='v/'+S[i].v+'.mp4';c.v.preload='auto';c.v.load();}}
+  function play(i){var p=clips[i].v.play();if(p&&p.catch)p.catch(function(){});}
+  function setCopy(i,delay){
+    var s=S[i];txt.classList.remove('in');
+    setTimeout(function(){
+      $('eye').textContent=s.eye;
+      $('hl').innerHTML=s.h.map(function(l){return '<span class="ln'+(l[1]===1?' b':l[1]===2?' y':'')+'"><span>'+l[0]+'</span></span>';}).join('');
+      $('pp').textContent=s.p;void txt.offsetWidth;txt.classList.add('in');
+    },delay);
+    $('hudtxt').innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(N).padStart(2,'0')+' · '+s.n;
+    ghost.textContent=String(i+1).padStart(2,'0');
+    rail.forEach(function(b,j){b.classList.toggle('on',j===i);});
+  }
+  /* transição: três lâminas diagonais (marrom, laranja, sálvia) cruzam a tela e trocam a cena por trás */
+  function ease(x){return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;}
+  function go(dir,target){
+    if(busy)return;busy=true;
+    var ni=target!=null?target:(cur+dir+N)%N,a=clips[cur],b=clips[ni];
+    ensure(ni);ensure((ni+1)%N);
+    a.el.classList.add('out');
+    setCopy(ni,reduce?0:620);
+    var t0=performance.now(),dur=reduce?300:TR*1000,swapped=false,sg=dir>0?1:-1;
+    (function step(now){
+      var x=Math.min(1,(now-t0)/dur);
+      shards.forEach(function(s,k){
+        var lx=Math.min(1,Math.max(0,(x-k*.08)/.76)),e=ease(lx);
+        var pos=reduce?200:(130-260*e)*sg;
+        s.style.transform='translateX('+pos+'%) skewX('+(-18*sg)+'deg)';
+      });
+      if(!swapped&&x>.46){swapped=true;b.v.currentTime=0;play(ni);a.el.classList.remove('on','out');a.v.pause();b.el.classList.add('on');cur=ni;}
+      if(x<1)requestAnimationFrame(step);
+      else{shards.forEach(function(s){s.style.transform='translateX(130%) skewX(-18deg)';});busy=false;}
+    })(t0);
+  }
+  function jump(i){if(i===cur||busy)return;go(i>cur?1:-1,i);}
+  $('next').onclick=function(){go(1);};$('prev').onclick=function(){go(-1);};
+  addEventListener('keydown',function(e){if(e.target.closest&&e.target.closest('input'))return;if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1);});
+  var sx=null,sy=null;
+  stage.addEventListener('touchstart',function(e){if(e.target.closest('.panel'))return;sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  stage.addEventListener('touchend',function(e){if(sx===null)return;var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.3)go(dx<0?1:-1);sx=null;});
+  /* câmera em profundidade: inclina com o mouse (computador) ou com o celular */
+  function tilt(nx,ny){if(reduce)return;cam.style.transform='rotateY('+(nx*3).toFixed(2)+'deg) rotateX('+(-ny*2.2).toFixed(2)+'deg) translate3d('+(-nx*18).toFixed(1)+'px,'+(-ny*12).toFixed(1)+'px,0)';ghost.style.transform='translate('+(nx*-34)+'px,'+(ny*-22)+'px)';}
+  stage.addEventListener('pointermove',function(e){if(e.pointerType!=='mouse')return;var r=stage.getBoundingClientRect();tilt((e.clientX-r.left)/r.width*2-1,(e.clientY-r.top)/r.height*2-1);});
+  stage.addEventListener('pointerleave',function(){tilt(0,0);});
+  addEventListener('deviceorientation',function(e){if(e.gamma==null)return;tilt(Math.max(-1,Math.min(1,e.gamma/25)),Math.max(-1,Math.min(1,(e.beta-45)/25)));});
+  if('IntersectionObserver' in window)new IntersectionObserver(function(es){visible=es[0].isIntersecting;if(visible&&!paused)play(cur);else clips[cur].v.pause();}).observe(stage);
+  document.addEventListener('visibilitychange',function(){if(document.hidden)clips[cur].v.pause();else if(visible&&!paused)play(cur);});
+  stage.addEventListener('click',function(e){if(e.target.closest('a,button,.panel,input,label'))return;paused=!paused;if(paused)clips[cur].v.pause();else play(cur);});
+  (function tick(){
+    requestAnimationFrame(tick);
+    var v=clips[cur].v,d=v.duration||5.5,t=v.currentTime||0;
+    $('bar').style.width=(Math.min(1,t/d)*100)+'%';
+    if(!busy&&visible&&!paused&&v.duration&&t>=d-TR*.5-.05)go(1);
+    if(!busy&&t>d*.3)ensure((cur+1)%N);
+  })();
+  play(0);setCopy(0,0);
+  setTimeout(function(){$('intro').classList.add('gone');},reduce?0:2000);
+
+  /* vídeo da localização só toca quando aparece */
+  var lv=document.querySelector('.locimg video');
+  if('IntersectionObserver' in window)new IntersectionObserver(function(es){if(es[0].isIntersecting){var p=lv.play();if(p&&p.catch)p.catch(function(){});}else lv.pause();}).observe(lv);
+
+  /* galeria arrastável + ampliação */
+  var G=[['v/s4.jpg','Piscina','Adulto e infantil com prainha'],['v/s6.jpg','Academia','Climatizada'],['v/s7.jpg','Salão de festas','Climatizado'],['v/g1.jpg','Salão de jogos','Entregue equipado'],['v/g7.jpg','Kids','Brinquedoteca'],['v/s8.jpg','Parquinho','Ao ar livre'],['v/g3.jpg','Bicicletário','Bike'],['v/g4.jpg','Pet park','Para o seu pet'],['v/g2.jpg','Espaço para esportes','Quadra'],['v/g5.jpg','Mini market','Conveniência 24h'],['v/a10.jpg','Living','Sala integrada'],['v/s9.jpg','Varanda gourmet','Guarda-corpo de vidro']];
+  var strip=$('strip');
+  G.forEach(function(g){var b=document.createElement('button');b.type='button';b.className='card';b.innerHTML='<img src="'+g[0]+'" alt="'+g[1]+'" loading="lazy" draggable="false"><span class="eq">Equipado</span><span class="lab"><small>'+g[2]+'</small><b>'+g[1]+'</b></span>';
+    b.onclick=function(){if(strip._moved)return;$('lbi').src=g[0];$('lbi').alt=g[1];$('lbc').textContent=g[1]+' · '+g[2];$('lb').classList.add('open');};strip.appendChild(b);});
+  var down=false,px=0,sl=0;
+  strip.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse')return;down=true;strip._moved=false;px=e.clientX;sl=strip.scrollLeft;});
+  addEventListener('pointermove',function(e){if(!down)return;var dx=e.clientX-px;if(Math.abs(dx)>6){strip._moved=true;strip.classList.add('drag');}strip.scrollLeft=sl-dx;});
+  addEventListener('pointerup',function(){if(!down)return;down=false;strip.classList.remove('drag');setTimeout(function(){strip._moved=false;},50);});
+  function lbClose(){$('lb').classList.remove('open');}
+  $('lbx').onclick=lbClose;$('lb').addEventListener('click',function(e){if(e.target.id==='lb')lbClose();});
+
+  /* plantas */
+  var P=[
+    {n:'Tipo 01',a:'66,89 m²',i:'v/pl1.jpg',l:['3 quartos, sendo 1 suíte','Varanda gourmet','Sala e cozinha integradas'],p:'Torres 1 e 2 · térreo ao 12º · colunas 1, 4, 5 e 8<br>Torre 1 · 13º pavimento · coluna 8'},
+    {n:'Tipo 02',a:'59,84 m²',i:'v/pl2.jpg',l:['2 quartos, sendo 1 suíte','Varanda gourmet','Sala e cozinha integradas'],p:'Torres 1 e 2 · térreo ao 13º · colunas 2, 3, 6 e 7'},
+    {n:'Tipo 03 (PCD)',a:'66,89 m²',i:'v/pl3.jpg',l:['2 quartos, sendo 1 suíte','Planta adaptada (PCD)','Ambientes amplos e integrados'],p:'Torre 1 · 13º · colunas 1, 4 e 5<br>Torre 2 · 13º · colunas 1, 4, 5 e 8'}
+  ];
+  var tabs=$('tabs'),bs=P.map(function(p,i){var b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.textContent=p.n+' · '+p.a;b.onclick=function(){sel(i);};tabs.appendChild(b);return b;});
+  function sel(i){var p=P[i];bs.forEach(function(b,j){b.setAttribute('aria-selected',j===i?'true':'false');});var im=$('pimg');im.style.opacity=0;im.style.transform='scale(.96) rotate(-2deg)';
+    setTimeout(function(){im.src=p.i;im.alt='Planta '+p.n+' humanizada';im.style.opacity=1;im.style.transform='none';},220);
+    $('pname').textContent='Planta '+p.n;$('parea').textContent=p.a;$('plist').innerHTML=p.l.map(function(x){return '<li>'+x+'</li>';}).join('');$('ppos').innerHTML=p.p;}
+  sel(0);
+
+  /* cadastro: cartão no computador, gaveta no celular */
+  var panel=$('cadastro'),mcta=$('mcta'),home=panel.parentNode,anchor=panel.nextSibling,mf=$('mform');
+  function sheet(){return matchMedia('(max-width:1100px)').matches;}
+  function place(){if(sheet()){if(panel.parentNode!==mf)mf.appendChild(panel);}else if(panel.parentNode!==home){home.insertBefore(panel,anchor);}}
+  place();addEventListener('resize',place);
+  function open(e){if(e)e.preventDefault();var t=sheet()?mf:$('tour');scrollTo({top:t.getBoundingClientRect().top+scrollY-(sheet()?10:0),behavior:'smooth'});setTimeout(function(){$('nome').focus({preventScroll:true});},600);if(window.fbq)fbq('track','Contact');}
+  [].forEach.call(document.querySelectorAll('[data-open]'),function(b){b.addEventListener('click',open);});
+  addEventListener('keydown',function(e){if(e.key==='Escape')lbClose();});
+  /* botão fixo some quando o formulário está na tela */
+  if('IntersectionObserver' in window)new IntersectionObserver(function(es){mcta.classList.toggle('hide',es[0].intersectionRatio>.35);},{threshold:[0,.35,.6]}).observe(mf);
+  var tel=$('tel');
+  tel.addEventListener('input',function(){var d=tel.value.replace(/\D/g,'').slice(0,11);tel.value=d.length>6?'('+d.slice(0,2)+') '+d.slice(2,d.length-4)+'-'+d.slice(-4):d.length>2?'('+d.slice(0,2)+') '+d.slice(2):d;});
+  ['nome','tel','email','lgpd'].forEach(function(id){$(id).addEventListener('input',function(){$('e-'+id).textContent='';});});
+  var params={};try{new URLSearchParams(location.search).forEach(function(v,k){if(/^utm_|fbclid/.test(k))params[k]=v;});}catch(e){}
+  $('Lead_Absolut').addEventListener('submit',function(e){
+    e.preventDefault();
+    var f={nome:$('nome').value.trim(),telefone:'55'+tel.value.replace(/\D/g,''),email:$('email').value.trim().toLowerCase(),empreendimento:'Absolut Home',imobiliaria:'Morar Bem Imobiliária'};
+    var bad=false;function err(id,m){$('e-'+id).textContent=m;bad=true;}
+    if(f.nome.split(' ').filter(Boolean).length<2)err('nome','Digite nome e sobrenome.');
+    if(f.telefone.length<12)err('tel','Digite o WhatsApp com DDD.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email))err('email','Digite um e-mail válido.');
+    if(!$('lgpd').checked)err('lgpd','Marque a autorização para podermos te chamar.');
+    if(bad||$('site').value)return;
+    f.origem='site-absolut';f.data=new Date().toISOString();Object.assign(f,params);
+    var btn=$('send');btn.disabled=true;$('send-t').textContent='Enviando…';
+    function done(){[].forEach.call($('Lead_Absolut').querySelectorAll('.f,.consent,#send'),function(el){el.hidden=true;});$('ok').hidden=false;}
+    if(window.fbq)fbq('track','Lead',{content_name:'Absolut Home'});
+    if(!CONFIG.webhookUrl){setTimeout(done,600);return;}
+    fetch(CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)}).then(function(r){if(!r.ok)throw 0;done();})
+      .catch(function(){btn.disabled=false;$('send-t').textContent='Quero conhecer o Absolut';$('e-lgpd').textContent='Não conseguimos enviar agora. Tente de novo em alguns segundos.';});
+  });
+})();
+</script>
+
+</body>
+</html>
